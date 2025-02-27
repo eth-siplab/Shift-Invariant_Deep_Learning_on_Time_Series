@@ -2,7 +2,6 @@
 Data Pre-processing on dalia dataset.
 
 '''
-
 import os
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
@@ -19,7 +18,6 @@ def load_domain_data(domain_idx):
     file = open(str_folder + 'Dalia_data.pkl', 'rb')
     data = cp.load(file)
     data = data['whole_dataset']
-    # np.warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning) 
     data = np.asarray(data, dtype=object)
     domain_idx = int(domain_idx)
     X = data[domain_idx,0]

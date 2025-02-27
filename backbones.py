@@ -111,10 +111,6 @@ class FCN_big(nn.Module):
             logits = self.logits(x_flat)
             return logits, x
 
-
-
-
-
 class FCN_blur(nn.Module):
     def __init__(self, n_channels, n_classes, out_channels=128, backbone=True, args=None):
         super(FCN_blur, self).__init__()
@@ -174,7 +170,6 @@ class FCN_blur(nn.Module):
             x_flat = x.reshape(x.shape[0], -1)
             logits = self.logits(x_flat)
             return logits, x
-
 
 class FCN_aps(nn.Module):
     def __init__(self, n_channels, n_classes, out_channels=128, backbone=True, args=None):
@@ -282,8 +277,6 @@ class FCN_controller(nn.Module):
         logits = self.logits(x_flat)
         return (logits.squeeze())
 
-
-
 class DeepConvLSTM(nn.Module):
     def __init__(self, n_channels, n_classes, conv_kernels=64, kernel_size=5, LSTM_units=128, backbone=True):
         super(DeepConvLSTM, self).__init__()
@@ -342,88 +335,6 @@ class conbr_block(nn.Module):
         x = self.bn(x)
         out = self.relu(x)
         return out
-    
-class UNET_encode(nn.Module):
-    def __init__(self, input_dim, layer_n, kernel_size, depth, args, backbone=True):
-        super(UNET_encode, self).__init__()
-        self.input_dim = input_dim
-        self.layer_n = layer_n
-        self.kernel_size = kernel_size
-        self.depth = depth
-        self.backbone = backbone
-        self.args = args
-
-        self.AvgPool1D1 = nn.AvgPool1d(kernel_size=2, stride=2)
-        self.AvgPool1D2 = nn.AvgPool1d(kernel_size=4, stride=4)
-
-        self.layer1 = self.down_layer(self.input_dim, self.layer_n, self.kernel_size, 1, 1)
-        self.layer2 = self.down_layer(self.layer_n, int(self.layer_n * 2), self.kernel_size, 2, 2)
-        self.layer3 = self.down_layer(int(self.layer_n * 2) + int(self.input_dim), int(self.layer_n * 3),
-                                      self.kernel_size, 2, 2)
-        self.layer4 = self.down_layer(int(self.layer_n * 3) + int(self.input_dim), int(self.layer_n * 4),
-                                      self.kernel_size, 2, 2)
-
-        self.out_act = nn.ReLU()
-        self.out_dim = 2048
-
-    def down_layer(self, input_layer, out_layer, kernel, stride, depth):
-        block = []
-        block.append(conbr_block(input_layer, out_layer, kernel, stride, 1))
-        return nn.Sequential(*block)
-    
-    def forward(self, x):
-        x = x.permute(0, 2, 1) # (batch, channel, length)
-        pool_x1 = self.AvgPool1D1(x)
-        pool_x2 = self.AvgPool1D2(x)
-        
-        #############Encoder#####################
-        out_0 = self.layer1(x)
-        out_1 = self.layer2(out_0)
-
-        x1 = torch.cat([out_1, pool_x1], 1)
-        out_2 = self.layer3(x1)
-
-        x2 = torch.cat([out_2, pool_x2], 1)
-        x3 = self.layer4(x2)
-        
-        #############Decoder####################
-        if self.backbone:
-            return out_0, out_1, out_2, x3
-        else:
-            return None, x3
-        
-
-########################
-class UNET_reconstruct(nn.Module):
-    def __init__(self, layer_n, kernel_size, out_channels, depth):
-        super(UNET_reconstruct, self).__init__()
-        self.layer_n = layer_n
-        self.kernel_size = kernel_size
-        self.depth = depth
-        
-        self.cbr_up1 = conbr_block(int(self.layer_n * 7), int(self.layer_n * 3), self.kernel_size, 1, 1)
-        self.cbr_up2 = conbr_block(int(self.layer_n * 5), int(self.layer_n * 2), self.kernel_size, 1, 1)
-        self.cbr_up3 = conbr_block(int(self.layer_n * 3), self.layer_n, self.kernel_size, 1, 1)
-        self.outcov = nn.Conv1d(self.layer_n, out_channels, kernel_size=self.kernel_size, stride=1, padding=2)
-        self.upsample = nn.Upsample(scale_factor=2, mode='linear', align_corners=True)
-    
-    def forward(self, out_0, out_1, out_2, x3):
-        #############Decoder####################
-        up = self.upsample(x3)
-        up = torch.cat([up, out_2], 1)
-        up = self.cbr_up1(up)
-
-        up = self.upsample(up)
-        up = torch.cat([up, out_1], 1)
-        up = self.cbr_up2(up)
-
-        up = self.upsample(up)
-        up = torch.cat([up, out_0], 1)
-        up = self.cbr_up3(up)
-
-        out = self.outcov(up)
-        # out1 = torch.tanh(out.squeeze())
-        return out.squeeze()
     
 ##############################################################################
 class LSTM(nn.Module):
@@ -585,236 +496,6 @@ class Transformer(nn.Module):
         else:
             out = self.classifier(x)
             return out, x
-
-class Classifier(nn.Module):
-    def __init__(self, bb_dim, n_classes):
-        super(Classifier, self).__init__()
-
-        self.classifier = nn.Linear(bb_dim, n_classes)
-
-    def forward(self, x):
-        out = self.classifier(x)
-
-        return out
-
-
-class Projector(nn.Module):
-    def __init__(self, model, bb_dim, prev_dim, dim):
-        super(Projector, self).__init__()
-        if model == 'SimCLR':
-            self.projector = nn.Sequential(nn.Linear(bb_dim, prev_dim),
-                                           nn.ReLU(inplace=True),
-                                           nn.Linear(prev_dim, dim))
-        elif model == 'byol':
-            self.projector = nn.Sequential(nn.Linear(bb_dim, prev_dim, bias=False),
-                                           nn.BatchNorm1d(prev_dim),
-                                           nn.ReLU(inplace=True),
-                                           nn.Linear(prev_dim, dim, bias=False),
-                                           nn.BatchNorm1d(dim, affine=False))
-        elif model == 'NNCLR':
-            self.projector = nn.Sequential(nn.Linear(bb_dim, prev_dim, bias=False),
-                                           nn.BatchNorm1d(prev_dim),
-                                           nn.ReLU(inplace=True),
-                                           nn.Linear(prev_dim, prev_dim, bias=False),
-                                           nn.BatchNorm1d(prev_dim),
-                                           nn.ReLU(inplace=True),
-                                           nn.Linear(prev_dim, dim, bias=False),
-                                           nn.BatchNorm1d(dim))
-        elif model == 'TS-TCC':
-            self.projector = nn.Sequential(nn.Linear(dim, bb_dim // 2),
-                                           nn.BatchNorm1d(bb_dim // 2),
-                                           nn.ReLU(inplace=True),
-                                           nn.Linear(bb_dim // 2, bb_dim // 4))
-        else:
-            raise NotImplementedError
-
-    def forward(self, x):
-        x = self.projector(x)
-        return x
-
-class Reconstructer(nn.Module):
-    def __init__(self, model, layer_n, kernel_size, out_channels, depth=1):
-        super(Reconstructer, self).__init__()
-        if model == 'Auditory':
-            self.Reconstructer = UNET_reconstruct(layer_n, kernel_size, out_channels, depth)
-        else:
-            raise NotImplementedError
-
-    def forward(self, out0, out1, out2, x3):
-        x = self.Reconstructer(out0, out1, out2, x3)
-        return x    
-
-class Predictor(nn.Module):
-    def __init__(self, model, dim, pred_dim):
-        super(Predictor, self).__init__()
-        if model == 'SimCLR':
-            pass
-        elif model == 'byol':
-            self.predictor = nn.Sequential(nn.Linear(dim, pred_dim),
-                                           nn.BatchNorm1d(pred_dim),
-                                           nn.ReLU(inplace=True),
-                                           nn.Linear(pred_dim, dim))
-        elif model == 'NNCLR':
-            self.predictor = nn.Sequential(nn.Linear(dim, pred_dim),
-                                           nn.BatchNorm1d(pred_dim),
-                                           nn.ReLU(inplace=True),
-                                           nn.Linear(pred_dim, dim))
-        else:
-            raise NotImplementedError
-
-    def forward(self, x):
-        x = self.predictor(x)
-        return x
-
-class EMA():
-    def __init__(self, beta):
-        super().__init__()
-        self.beta = beta
-
-    def update_average(self, old, new):
-        if old is None:
-            return new
-        return old * self.beta + (1 - self.beta) * new
-
-
-def update_moving_average(ema_updater, ma_model, current_model):
-    for current_params, ma_params in zip(current_model.parameters(), ma_model.parameters()):
-        old_weight, up_weight = ma_params.data, current_params.data
-        ma_params.data = ema_updater.update_average(old_weight, up_weight)
-
-
-from functools import wraps
-
-
-def singleton(cache_key):
-    def inner_fn(fn):
-        @wraps(fn)
-        def wrapper(self, *args, **kwargs):
-            instance = getattr(self, cache_key)
-            if instance is not None:
-                return instance
-
-            instance = fn(self, *args, **kwargs)
-            setattr(self, cache_key, instance)
-            return instance
-
-        return wrapper
-
-    return inner_fn
-
-
-# a wrapper class for the base neural network
-# will manage the interception of the hidden layer output
-# and pipe it into the projector and predictor nets
-
-class NetWrapper(nn.Module):
-    def __init__(self, net, projection_size, projection_hidden_size, DEVICE, layer=-2):
-        super().__init__()
-        self.net = net
-        self.layer = layer
-        self.DEVICE = DEVICE
-
-        self.projector = None
-        self.projection_size = projection_size
-        self.projection_hidden_size = projection_hidden_size
-
-        self.hidden = {}
-        self.hook_registered = False
-
-    def _find_layer(self):
-        children = [*self.net.children()]
-        print('children[self.layer]:', children[self.layer])
-        return children[self.layer]
-        return None
-
-    def _hook(self, _, input, output):
-        device = input[0].device
-        self.hidden[device] = output.reshape(output.shape[0], -1)
-
-    def _register_hook(self):
-        layer = self._find_layer()
-        assert layer is not None, f'hidden layer ({self.layer}) not found'
-        handle = layer.register_forward_hook(self._hook)
-        self.hook_registered = True
-
-    @singleton('projector')
-    def _get_projector(self, hidden):
-        _, dim = hidden.shape
-        projector = Projector(model='byol', bb_dim=dim, prev_dim=self.projection_hidden_size, dim=self.projection_size)
-        return projector.to(hidden)
-
-    def get_representation(self, x):
-
-        if self.layer == -1:
-            return self.net(x)
-
-        if not self.hook_registered:
-            self._register_hook()
-
-        self.hidden.clear()
-        _ = self.net(x)
-        hidden = self.hidden[x.device]
-        self.hidden.clear()
-
-        assert hidden is not None, f'hidden layer {self.layer} never emitted an output'
-        return hidden
-
-    def forward(self, x):
-        if self.net.__class__.__name__ in ['AE', 'CNN_AE']:
-            x_decoded, representation = self.get_representation(x)
-        else:
-            _, representation = self.get_representation(x)
-
-        if len(representation.shape) == 3:
-            representation = representation.reshape(representation.shape[0], -1)
-
-        projector = self._get_projector(representation)
-        projection = projector(representation)
-        if self.net.__class__.__name__ in ['AE', 'CNN_AE']:
-            return projection, x_decoded, representation
-        else:
-            return projection, representation
-
-
-class NNMemoryBankModule(MemoryBankModule):
-    """Nearest Neighbour Memory Bank implementation
-    This class implements a nearest neighbour memory bank as described in the
-    NNCLR paper[0]. During the forward pass we return the nearest neighbour
-    from the memory bank.
-    [0] NNCLR, 2021, https://arxiv.org/abs/2104.14548
-    Attributes:
-        size:
-            Number of keys the memory bank can store. If set to 0,
-            memory bank is not used.
-    """
-
-    def __init__(self, size: int = 2 ** 16):
-        super(NNMemoryBankModule, self).__init__(size)
-
-    def forward(self,
-                output: torch.Tensor,
-                update: bool = False):
-        """Returns nearest neighbour of output tensor from memory bank
-        Args:
-            output: The torch tensor for which you want the nearest neighbour
-            update: If `True` updated the memory bank by adding output to it
-        """
-
-        output, bank = \
-            super(NNMemoryBankModule, self).forward(output, update=update)
-        bank = bank.to(output.device).t()
-
-        output_normed = torch.nn.functional.normalize(output, dim=1)
-        bank_normed = torch.nn.functional.normalize(bank, dim=1)
-
-        similarity_matrix = \
-            torch.einsum("nd,md->nm", output_normed, bank_normed)
-        index_nearest_neighbours = torch.argmax(similarity_matrix, dim=1)
-        nearest_neighbours = \
-            torch.index_select(bank, dim=0, index=index_nearest_neighbours)
-
-        return nearest_neighbours
-
 
 ##################### ResNet-1D ############################
 
@@ -1367,7 +1048,6 @@ class ResNet1D_blur(nn.Module):
             
             return out_logit, out 
         
-
 ##################### ResNet-1D APS ############################
 
 class MyConv1dPadSame_aps(nn.Module):
@@ -1642,15 +1322,7 @@ class ResNet1D_aps(nn.Module):
             
             return out_logit, out 
         
-
 ##################### My ReLU ############################
-        
-class myReLU(nn.Module):
-    def __init__(self):
-        super(myReLU, self).__init__()
-        
-    def forward(self, x):
-        return F.relu(x)
 
 class MyConv1dPadSame_aReLU(nn.Module):
     """
@@ -2355,144 +2027,3 @@ class MultiHeadAttention(nn.Module):
         q = self.layer_norm(q)
 
         return q, attn
-
-class multi_rate_2(nn.Module):
-    def __init__(self, num_classes, sample_length=200, channels_size=9, n_block=6, mag_ratio=0.3, args=None):
-        super(multi_rate_2, self).__init__()
-
-        self.freq = torch.fft.rfftfreq(n=sample_length)
-        self.project = ProjectionModule(in_channels=channels_size, freq=self.freq, mag_ratio=mag_ratio)
-        self.second_model = ResNet1D(in_channels=channels_size, base_filters=32, kernel_size=5, stride=2, groups=1, n_block=n_block, n_classes=num_classes, downsample_gap=2, increasefilter_gap=4, backbone=False)
-        # self.second_model = FCN(n_channels=args.n_feature, n_classes=args.n_class, backbone=False, args=args)
-
-    def forward(self, x):
-        mod_x, res_loss = self.project(x)
-        out, _ = self.second_model(mod_x)
-        return out, res_loss    
-
-class ProjectionModule(nn.Module):
-    def __init__(self, in_channels, freq, mag_ratio=0.3):
-        super(ProjectionModule, self).__init__()
-        self.in_channels = in_channels
-        self.freq = freq
-        self.mag_ratio = mag_ratio
-        # Define the weight matrix as a trainable parameter
-        self.weight_mag = nn.Parameter(torch.rand(in_channels, 101) + 0.5)  # Sampled between 0.5 and 1.5
-        self.weight_angle = nn.Parameter(torch.rand(in_channels, 1) * 2 * math.pi - math.pi)  # Sampled between -pi and pi
-        self.mag_cont = mag_cont(input_size=self.freq.size(0), hidden_size=self.freq.size(0))
-        self.angle_cont = angle_cont(input_size=1, hidden_size=10)
-
-    def calculate_divergence(self, fft_orig, fft_new):
-        # normalize to sum 1
-        freq_interest_org = fft_orig / torch.sum(fft_orig, dim=1, keepdim=True)
-        freq_interest = fft_new / torch.sum(fft_new, dim=1, keepdim=True)
-        kl_loss = nn.KLDivLoss(reduction='sum')
-        if torch.min(freq_interest) == 0 or torch.min(freq_interest_org) == 0:
-            freq_interest = freq_interest + 1e-10
-            freq_interest_org = freq_interest_org + 1e-10
-        loss = kl_loss(torch.log(freq_interest), freq_interest_org)
-        return loss
-    
-    def von_mises_sample(self, mu, kappa):
-        # Sample from von Mises distribution
-        m = torch.distributions.von_mises.VonMises(loc=mu, concentration=kappa)
-        sampled_angles = m.sample()
-        return sampled_angles
-
-    # Custom loss function for von Mises distribution
-    def von_mises_loss(self, kappa):
-        loss = -torch.mean(kappa)
-        return loss
-
-    def forward(self, x):
-        # import pdb;pdb.set_trace();
-        x_fft = torch.fft.rfft(x, n=x.size(1), dim=1, norm='ortho')  
-        mag_fft = torch.abs(x_fft)
-        angle_fft = torch.angle(x_fft)
-        # mod_mag = mag_fft
-        mod_mag = torch.empty_like(mag_fft)
-        for i in range(mag_fft.size(2)):
-            mod_mag[:,:,i] = mag_fft[:,:,i] + self.mag_ratio * self.mag_cont(mag_fft[:,:,i].unsqueeze(2))
-        # mod_mag = mag_fft + self.mag_ratio * self.mag_cont(mag_fft)
-
-        # residual_loss = torch.mean(torch.abs(mag_fft - mod_mag))
-        # residual_loss = torch.nn.functional.mse_loss(mag_fft, mod_mag)
-        residual_loss = self.calculate_divergence(mag_fft, mod_mag)
-        #
-        params = self.angle_cont(angle_fft[:,:,0].unsqueeze(2))
-        angles = self.von_mises_sample(params[0], params[1])
-        # residual_loss += self.von_mises_loss(params[1])
-        # 
-        angle_to_add = (2*torch.pi*self.freq).unsqueeze(1).expand_as(angle_fft)
-        # mod_angle = angle_fft + self.weight_angle * angle_to_add.to(angle_fft.device)
-        mod_angle = angle_fft + angles[:,None,None] * angle_to_add.to(angle_fft.device)
-        #
-        z =  torch.polar(mod_mag, mod_angle) # Go back to polar coordinates
-        mixed_samples_time = torch.fft.irfft(z, n=x.size(1), dim=1, norm='ortho')
-
-        return mixed_samples_time, residual_loss
-
-
-class mag_cont(nn.Module):
-    def __init__(self, input_size, hidden_size):
-        super(mag_cont, self).__init__()
-        self.input_size = input_size
-        self.hidden_size = hidden_size
-        self.fc1 = nn.Linear(input_size, hidden_size)
-        self.fc2 = nn.Linear(hidden_size, input_size)
-
-    def forward(self, x):
-        x = x.transpose(1, 2)
-        x = torch.relu(self.fc1(x))
-        weights = torch.sigmoid(self.fc2(x))  # Ensure outputs are between 0 and 1
-        weights = 0.5 + weights  # Shift and scale
-        return weights.transpose(1, 2).squeeze()
-    
-
-class angle_cont(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size=2, num_layers=1):
-        super(angle_cont, self).__init__()
-        self.learning = True
-        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
-        self.fc = nn.Linear(hidden_size, output_size)
-        self.relu = nn.ReLU()
-        self.von_mises = VonMisesLayer()
-
-    def forward(self, x):
-        if self.learning:
-            lstm_out, _ = self.lstm(x)
-            out = self.fc(lstm_out[:, -1, :])  # Use the output of the last time step
-            mu, kappa = out[:, 0], self.relu(out[:, 1]) + 0.5
-        else:
-            mu, kappa = self.von_mises(x)
-        return mu, kappa
-
-class VonMisesLayer(nn.Module):
-    def __init__(self):
-        super(VonMisesLayer, self).__init__()
-        """
-        Compute von Mises distribution parameters for a batch of angle tensors.
-        
-        Args:
-        - x (torch.Tensor): Batch of angle tensors with shape (batch_size, angles)
-        
-        Returns:
-        - mu (torch.Tensor): Mean direction for each element in the batch with shape (batch_size,)
-        - kappa (torch.Tensor): Concentration parameter for each element in the batch with shape (batch_size,)
-        """
-
-    def forward(self, x):
-        # Mean direction (μ)
-        sin_mean = torch.sin(x).mean(dim=1)  
-        cos_mean = torch.cos(x).mean(dim=1)  
-        mu = torch.atan2(sin_mean, cos_mean)  # Compute arctangent of the mean sine/cosine values
-
-        # Resultant length (R)
-        sin_sq_mean = torch.sin(x).pow(2).mean(dim=1)  # Compute mean of squared sine values along the angle dimension
-        cos_sq_mean = torch.cos(x).pow(2).mean(dim=1)  # Compute mean of squared cosine values along the angle dimension
-        R = torch.sqrt(sin_sq_mean + cos_sq_mean)  # Compute square root of the sum of squared means
-
-        # Concentration parameter (κ)
-        kappa = torch.log((R + torch.sqrt(R.pow(2) + 1e-8)) / (1 - R + torch.sqrt((1 - R).pow(2) + 1e-8)))
-
-        return mu, kappa

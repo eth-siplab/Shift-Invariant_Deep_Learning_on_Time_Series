@@ -15,7 +15,6 @@ from data_preprocess.data_preprocess_utils import get_sample_weights, opp_slidin
 
 NUM_FEATURES = 6
 
-
 class data_loader_hhar(Dataset):
     def __init__(self, samples, labels, domains):
         self.samples = samples

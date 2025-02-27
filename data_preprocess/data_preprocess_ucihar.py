@@ -48,26 +48,6 @@ def load_domain_data(domain_idx):
         X = data[0][0]
         y = data[0][1]
         d = data[0][2]
-        # if staug:
-        #     saved_filename_imfs = 'ucihar_domain_imfs' + domain_idx + '_wd.data' # "wd": with domain label
-        #     if os.path.isfile(data_dir + saved_filename_imfs) == True:
-        #         data_imfs = np.load(data_dir + saved_filename_imfs, allow_pickle=True)
-        #         X = data_imfs[0][0]
-        #         y = data_imfs[0][1]
-        #         d = data_imfs[0][2]
-        #     else:
-        #         list_of_imfs = []
-        #         for i in range(X.shape[0]): # For each sample in the domain
-        #             channel_list = []
-        #             for k in range(X.shape[2]):  # If there is one more than one channel
-        #                 channel_list.append(X[i,:,k])
-        #                 IMF = EMD(DTYPE=np.float16).emd(X[i,:,k])
-        #                 channel_list.append(IMF)
-        #             list_of_imfs.append(channel_list)
-        #         obj = [(list_of_imfs, y, d)]
-        #         f = open(os.path.join(data_dir, saved_filename_imfs), 'wb')
-        #         cp.dump(obj, f, protocol=cp.HIGHEST_PROTOCOL)
-        #         X = list_of_imfs
     else:
         if os.path.isdir(data_dir) == False:
             os.makedirs(data_dir)
@@ -193,9 +173,7 @@ def prep_domains_ucihar_subject_large(args):
         d_win_all = np.concatenate((d_win_all, d), axis=0) if d_win_all.size else d
 
     unique_y, counts_y = np.unique(y_win_all, return_counts=True)
-    #print('y_train label distribution: ', dict(zip(unique_y, counts_y)))
     weights = 100.0 / torch.Tensor(counts_y)
-    #print('weights of sampler: ', weights)
     weights = weights.double()
 
     sample_weights = get_sample_weights(y_win_all, weights)
@@ -258,17 +236,12 @@ def prep_domains_ucihar_subject_val(args):
     x = np.transpose(x.reshape((-1, 1, 128, 9)), (0, 2, 1, 3))
     data_set = data_loader_ucihar(x, y, d)
     valid_loader = DataLoader(data_set, batch_size=args.batch_size, drop_last=True, shuffle=False)
-    # target domain data prep
-    #print('target_domain:', args.target_domain)
-    x, y, d = load_domain_data(args.target_domain)
 
+    x, y, d = load_domain_data(args.target_domain)
     x = np.transpose(x.reshape((-1, 1, 128, 9)), (0, 2, 1, 3))
-    #print(" ..after sliding window: inputs {0}, targets {1}".format(x.shape, y.shape))
 
     data_set = data_loader_ucihar(x, y, d)
-    # todo: the batch size can be different for some ttt models, tbc
     target_loader = DataLoader(data_set, batch_size=args.batch_size, drop_last=True, shuffle=False)
-    #print('target_loader batch: ', len(target_loader))
 
     return source_loaders, valid_loader, target_loader
 
@@ -285,7 +258,6 @@ def prep_domains_ucihar_random(args):
 
         # n_channel should be 9, H: 1, W:128
         x_win = np.transpose(x_win.reshape((-1, 1, 128, 9)), (0, 2, 1, 3))
-        # print(" ..after sliding window: inputs {0}, targets {1}".format(x_win.shape, y_win.shape))
 
         x_win_all = np.concatenate((x_win_all, x_win), axis=0) if x_win_all.size else x_win
         y_win_all = np.concatenate((y_win_all, y_win), axis=0) if y_win_all.size else y_win
