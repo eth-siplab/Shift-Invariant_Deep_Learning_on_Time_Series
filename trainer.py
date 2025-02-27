@@ -12,8 +12,7 @@ from data_preprocess import data_preprocess_ieee_big
 from data_preprocess import data_preprocess_dalia
 from data_preprocess import data_preprocess_clemson
 from data_preprocess import data_preprocess_chapman
-from data_preprocess import data_preprocess_sleep
-from data_preprocess import data_preprocess_epilepsy    
+from data_preprocess import data_preprocess_sleep  
 from data_preprocess import data_preprocess_physio17
 from data_preprocess import data_preprocess_respTR
 

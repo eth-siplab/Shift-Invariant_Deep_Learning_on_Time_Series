@@ -79,14 +79,15 @@ def adjust_learning_rate(optimizer,  epoch):
         param_group['lr'] = lr
 
 def train(args, train_loaders, val_loader, model, DEVICE, criterion, save_dir='results/', model_c=None, model_cano=None):
-    if args.n_epoch == 0: 
+    if args.n_epoch == 0: # no training
         best_model = deepcopy(model.state_dict())
         model_dir = save_dir + args.model_name + '.pt' if args.phase_shift == False else save_dir + args.model_name + '_phase_shift.pt'
         torch.save(model.state_dict(), model_dir)
     
+    canonicalizer = None
     if model_c is not None: 
-        optimizer_model_c = optim.Adam(model_c.parameters(), lr=5e-4) # it was 5e-4 for clemson and resp, 1e-3 for HHAR
-        optimizer_model = optim.Adam(list(model.parameters()) + list(model_c.parameters()), lr=args.lr)
+        optimizer_model_c = torch.optim.Adam(model_c.parameters(), lr=5e-4) # it was 5e-4 for clemson and resp, 1e-3 for HHAR
+        optimizer_model = torch.optim.Adam(list(model.parameters()) + list(model_c.parameters()), lr=args.lr)
     elif args.cano and model_cano is not None:
         canonicalizer = GroupEquivariantSignalCanonicalization(model_cano, num_translations=16, in_shape = (args.n_feature, args.len_sw)) ### wrap it using equiadapt's canonicalization wrapper
         optimizer_model = torch.optim.Adam([{'params': model.parameters(), 'lr': args.lr, 'weight_decay':args.weight_decay}, {'params': canonicalizer.parameters(), 'lr': 1e-3},])        
@@ -112,8 +113,9 @@ def train(args, train_loaders, val_loader, model, DEVICE, criterion, save_dir='r
         for loader_idx, train_loader in enumerate(train_loaders):
             for idx, (sample, target, domain) in enumerate(train_loader):
                 n_batches += 1
+                target = target.to(DEVICE).long()
 
-                sample = process_sample(sample, args, model_c, canonicalizer, DEVICE)
+                sample, loss_c = process_sample(sample, args, model_c, canonicalizer, DEVICE)
                 
                 if args.random_aug:
                     sample, all_shifts = random_time_shift(sample)
@@ -181,7 +183,7 @@ def train(args, train_loaders, val_loader, model, DEVICE, criterion, save_dir='r
                     else:
                         out, _ = model(sample)
 
-                    loss = criterion(out.squeeze(), target.float())
+                    loss = criterion(out.squeeze(), target)
 
                     if args.backbone[-2:] == 'AE': 
                         loss += nn.MSELoss()(sample, x_decoded) * args.lambda1
@@ -228,9 +230,11 @@ def process_sample(sample, args, model_c, canonicalizer, DEVICE):
     
     # Apply controller transformation if enabled
     sample_c = None
+    loss_c = None
     if args.controller:
         fftsamples = torch.fft.rfft(sample, dim=1, norm='ortho')
         ref_frame = model_c(torch.abs(fftsamples).to(DEVICE).float())
+        loss_c = torch.std(ref_frame)
         sample_c = frame_transform(sample, fftsamples, ref_frame, args, DEVICE)
     
     # Apply canonicalization if enabled
@@ -243,7 +247,7 @@ def process_sample(sample, args, model_c, canonicalizer, DEVICE):
     elif args.controller and sample_c is not None:
         sample = sample_c
 
-    return sample
+    return sample.to(DEVICE).float(), loss_c
 
 def compute_metrics(args, targets, predictions, otp):
     """Compute evaluation metrics based on the dataset."""
@@ -314,7 +318,7 @@ def test(test_loader, model, DEVICE, criterion, plot=False, model_c=None, model_
         out = out.detach()
 
         # Compute loss and update totals
-        loss = criterion(out.squeeze(), target.float())
+        loss = criterion(out.squeeze(), target)
         total_loss += loss.item()
         _, predicted = torch.max(out.data, 1)
         total_samples += target.size(0)
@@ -355,6 +359,7 @@ def train_sup(args):
     if args.backbone == 'TWaveNet': 
         part = [[1, 0], [1, 1], [1, 1], [1, 0], [1, 1], [0, 0], [0, 0], [0, 0], [0, 0]]
         args.weight_decay = 1e-4
+    else: part = None
 
     # Instantiate the training model 
     model = build_model(args, part=part)
@@ -411,7 +416,6 @@ def train_sup(args):
         acc, mf1, correlation, const = test(test_loader, model_test, DEVICE, criterion, plot=False)
 
     return acc, mf1, correlation, const
-
 
 ######################################## 
 
