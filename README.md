@@ -109,19 +109,18 @@ Citation
 If you find our paper or codes useful, please cite our work:
 
     @inproceedings{
-    demirel2023finding,
-    title={Finding Order in Chaos: A Novel Data Augmentation Method for Time Series in Contrastive Learning},
+    demirel2025shifting,
+    title={Shifting the Paradigm: A Diffeomorphism Between Time Series Data Manifolds for Achieving Shift-Invariancy in Deep Learning},
     author={Berken Utku Demirel and Christian Holz},
-    booktitle={Thirty-seventh Conference on Neural Information Processing Systems},
-    year={2023},
-    url={https://openreview.net/forum?id=dbVRDk2wt7}
+    booktitle={The Thirteenth International Conference on Learning Representations},
+    year={2025},
+    url={https://openreview.net/forum?id=nibeaHUEJx}
     }
 
 Credits
 --------
 
-Canonicalization 
-[equiadapt library to make neural network architectures equivariant](https://equiadapt.readthedocs.io/en/latest/)
+Canonicalization is adapted from [equiadapt library to make neural network architectures equivariant](https://equiadapt.readthedocs.io/en/latest/)
 
 IEEE SPC dataset is from 
 the [Measuring Heart Rate During Physical Exercise by Subspace Decomposition and Kalman Smoothing](https://ieeexplore.ieee.org/document/8119878)
