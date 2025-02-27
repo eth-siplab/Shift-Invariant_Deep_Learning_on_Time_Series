@@ -2,7 +2,6 @@
 Data Pre-processing on UCIHAR dataset.
 
 '''
-
 import os
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
@@ -149,7 +148,6 @@ def prep_domains_ucihar_subject(args):
     x, y, d = load_domain_data(args.target_domain)
 
     x = np.transpose(x.reshape((-1, 1, 128, 9)), (0, 2, 1, 3))
-
 
     data_set = data_loader_ucihar(x, y, d)
     target_loader = DataLoader(data_set, batch_size=args.batch_size, shuffle=False)

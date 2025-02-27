@@ -41,9 +41,7 @@ def setup_dataloaders(args):
         args.n_feature = 9
         args.len_sw = 128
         args.n_class = 6
-        args.bb_dim = 2048
         train_loaders, val_loader, test_loader = data_preprocess_ucihar.prep_ucihar(args)
-        # train_loaders[0].dataset.samples.shape --> To check shape
     if args.dataset == 'usc':
         args.n_feature = 6
         args.len_sw = 100
@@ -85,7 +83,6 @@ def setup_dataloaders(args):
         args.len_sw = 100
         args.n_class = 6
         source_domain = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'] if args.cases == 'subject_large' else ['a', 'b', 'c', 'd']
-        # source_domain.remove(args.target_domain)
         train_loaders, val_loader, test_loader = data_preprocess_hhar.prep_hhar(args, SLIDING_WINDOW_LEN=args.len_sw, SLIDING_WINDOW_STEP=int(args.len_sw * 0.5),
                                                                                 device=args.device,
                                                                                 train_user=source_domain,

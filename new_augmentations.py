@@ -2,8 +2,6 @@ import numpy as np
 import torch
 import scipy
 import random
-import matplotlib.pyplot as plt
-
 
 def find_the_phase_of_biggest_component(fftsamples, freq):
     abs_fft = torch.abs(fftsamples)
@@ -60,7 +58,7 @@ def random_time_shift(samples):
         all_shiftes[i] = shift
     return shifted_samples, all_shiftes
 
-def continous_shift_evaluate(samples, model, DEVICE ,labels):
+def continuous_shift_evaluate(samples, model, DEVICE ,labels):
     # For each element in the batch shift randomly
     shifted_samples = torch.zeros([samples.shape[1], samples.shape[1], samples.shape[2]])
     shifts = torch.zeros(samples.shape[0], samples.shape[1], 4)
@@ -75,7 +73,6 @@ def continous_shift_evaluate(samples, model, DEVICE ,labels):
         shifts[i,:, :] = m(out).detach().cpu()
         shifts2[i,:] = predicted.detach().cpu()
     return shifted_samples, shifts
-
 
 def frame_transform(sample, fftsamples, ref_frame, args, DEVICE):
     freq = torch.fft.rfftfreq(n=sample.size(1)).to(DEVICE)
