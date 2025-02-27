@@ -16,7 +16,7 @@ Berken Utku Demirel, Christian Holz<br/>
  We theoretically and empirically demonstrate that the proposed transformation guarantees shift-invariance in deep learning models without imposing any limits to the shift.
  Our experiments on six time series tasks with state-of-the-art methods show that our approach consistently improves the performance while enabling models to achieve complete shift-invariance without modifying or imposing restrictions on the model's topology.
 <p align="center">
-  <img src="Figures/overall.jpg">
+  <img src="Figures/shifting_the_paradigm.jpg">
 </p>
 
 
