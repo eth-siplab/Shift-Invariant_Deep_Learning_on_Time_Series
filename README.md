@@ -122,8 +122,4 @@ Credits
 
 Canonicalization is adapted from [equiadapt library to make neural network architectures equivariant](https://equiadapt.readthedocs.io/en/latest/)
 
-IEEE SPC dataset is from 
-the [Measuring Heart Rate During Physical Exercise by Subspace Decomposition and Kalman Smoothing](https://ieeexplore.ieee.org/document/8119878)
- and the GitHub implementation of the paper.
-
  
