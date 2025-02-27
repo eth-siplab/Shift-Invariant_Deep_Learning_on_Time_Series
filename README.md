@@ -1,7 +1,6 @@
 # Shift-invariant Deep learning for Time-series
 
 
-
 ## Shifting the Paradigm: A Diffeomorphism Between Time Series Data Manifolds for Achieving Shift-Invariancy in Deep Learning (ICLR 2025, Official Code)
 
 Berken Utku Demirel, Christian Holz<br/>
@@ -84,31 +83,7 @@ python main_supervised_baseline.py --dataset 'ieee_big' --backbone 'resnet' --bl
 
 TLDR
 ----------
-The overall method to summarize. Two sinusoidal with a constant coefficient for mixup while changing the phase of them between &pi; and -&pi;.
-The anchor has two frequencies [f1: 2Hz, f2: 10Hz] and the sample has only one at 2Hz, e.g., 2Hz carries information while the anchor has noise at 10Hz.
-
-![My GIF](Figures/linear_method.gif)
-
-| *Figure 1.* | Sum of two sinusoidal in time and frequency domain using linear mixup |
-
-Observe the amplitude change when the linear mixup is used. The amplitude in 2Hz is about to vanish at some phase values even though both samples have a 2Hz component, i.e., linear mixup can destroy the information instead of interpolation.
-
-![My GIF](Figures/my_method.gif)
-
-| *Figure 2.* | Sum of two sinusoidal in time and frequency domain using the proposed method |
-
-The proposed method preserves frequency information without loss. Check the figures below to observe its behavior in polar coordinates.
-
-![My GIF](Figures/linear_polar.gif)
-
-| *Figure 3.* | Amplitude and phase for 2Hz sinusoidal in the generated sample using linear mixup given in polar coordinates |
-
-
-![My GIF](Figures/my_method_polar.gif)
-
-| *Figure 4.* | Amplitude and phase for 2Hz sinusoidal in the generated sample using the proposed method given in polar coordinates |
-
-When the proposed method is used, the amplitude of critical frequency does not change even though the phase difference.
+The animation below shows the main idea of our introduced transformation. 
 
 
 Citation
