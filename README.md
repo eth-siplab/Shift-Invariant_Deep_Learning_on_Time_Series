@@ -16,7 +16,14 @@ Berken Utku Demirel, Christian Holz<br/>
  We theoretically and empirically demonstrate that the proposed transformation guarantees shift-invariance in deep learning models without imposing any limits to the shift.
  Our experiments on six time series tasks with state-of-the-art methods show that our approach consistently improves the performance while enabling models to achieve complete shift-invariance without modifying or imposing restrictions on the model's topology.
 <p align="center">
-  <img src="Figures/overall_for_git.jpg">
+  <img src="Figures/overall_for_git.jpg" alt="Illustration of shift-invariant transformation">
+</p>
+
+<p align="center">
+  (a) An input signal in the time domain and complex plane representation of its decomposed sinusoidal of frequency $\omega_0 = \frac{2\pi}{T_0}$ with the phase angle $\phi_0$.  
+  (b) Guiding the diffeomorphism to map samples between manifolds.  
+  (c) The obtained waveform with a phase shift applied to all frequencies linearly, calculated by the angle difference, as in Equation~\ref{eq:phase_shift2}, without altering the waveform.  
+  (d) The loss functions for optimizing networks with the cross-entropy and the variance of possible manifolds.
 </p>
 
 
