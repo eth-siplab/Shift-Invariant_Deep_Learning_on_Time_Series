@@ -83,7 +83,7 @@ python main_supervised_baseline.py --dataset 'ieee_big' --backbone 'resnet' --bl
 
 TLDR
 ----------
-The animation below shows the main idea of our introduced transformation. 
+...
 
 
 Citation
