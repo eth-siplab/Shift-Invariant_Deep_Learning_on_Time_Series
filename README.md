@@ -40,7 +40,7 @@ Datasets
 1. Datasets
 - `Activity recognition`  [UCIHAR](https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones), [HHAR](https://archive.ics.uci.edu/dataset/344/heterogeneity+activity+recognition), [USC](https://dl.acm.org/doi/pdf/10.1145/2370216.2370438).
 - `Heart rate prediction`  [IEEE SPC22](https://signalprocessingsociety.org/community-involvement/ieee-signal-processing-cup-2015), [DaLiA](https://archive.ics.uci.edu/dataset/495/ppg+dalia).
-- `Cardiovascular disease (CVD) classification`  [CPSC2018](http://2018.icbeb.org/Challenge.html), [Chapman](https://digitalcommons.chapman.edu/scs_articles/653/).
+- `Cardiovascular disease (CVD) classification`  [PhysioNet](https://physionet.org/content/challenge-2017/1.0.0/), [Chapman](https://digitalcommons.chapman.edu/scs_articles/653/).
 - `Sleep stage classification` [Sleep-EDF](https://www.physionet.org/content/sleep-edf/1.0.0/)
 - `Step counting` [Clemson](https://sites.google.com/view/rmattfeld/pedometer-dataset)
 - `Lung audio classification` [Respiratory@TR](https://data.mendeley.com/datasets/p9z4h98s6j/1)
