@@ -83,7 +83,12 @@ python main_supervised_baseline.py --dataset 'ieee_big' --backbone 'resnet' --bl
 
 TLDR
 ----------
-...
+
+
+
+https://github.com/user-attachments/assets/4af1db2b-7379-45c4-aab8-800a8c12b4bb
+
+
 
 
 Citation
