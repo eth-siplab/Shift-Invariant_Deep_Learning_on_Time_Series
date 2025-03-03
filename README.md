@@ -45,7 +45,7 @@ Datasets
 - `Step counting` [Clemson](https://sites.google.com/view/rmattfeld/pedometer-dataset)
 - `Lung audio classification` [Respiratory@TR](https://data.mendeley.com/datasets/p9z4h98s6j/1)
   
-2. After downloading the raw data, they should be processed with the corresponding [scripts](https://github.com/eth-siplab/Finding_Order_in_Chaos/tree/main/raw_data_process), if there is any.
+2. After downloading the raw data, they should be processed with the corresponding scripts [from our previous work](https://github.com/eth-siplab/Finding_Order_in_Chaos/tree/main/raw_data_process) or [this repo](https://github.com/eth-siplab/Shift-Invariant_Deep_Learning_on_Time_Series/tree/main/data_preprocess/from_raw/Respiratory).
 
 Running
 ----------
@@ -102,6 +102,6 @@ If you find our paper or codes useful, please cite our work:
 Credits
 --------
 
-Canonicalization is adapted from [equiadapt library to make neural network architectures equivariant](https://equiadapt.readthedocs.io/en/latest/)
+Canonicalization is adapted from [equiadapt library to make neural network architectures equivariant](https://equiadapt.readthedocs.io/en/latest/).
 
  
