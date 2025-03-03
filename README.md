@@ -102,6 +102,6 @@ If you find our paper or codes useful, please cite our work:
 Credits
 --------
 
-Canonicalization is adapted from [equiadapt library to make neural network architectures equivariant](https://equiadapt.readthedocs.io/en/latest/)
+Canonicalization is adapted from [equiadapt library to make neural network architectures equivariant](https://equiadapt.readthedocs.io/en/latest/).
 
  
