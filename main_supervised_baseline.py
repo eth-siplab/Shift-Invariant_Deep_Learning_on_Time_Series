@@ -249,21 +249,21 @@ def process_sample(sample, args, model_c, canonicalizer, DEVICE):
 
     return sample.to(DEVICE).float(), loss_c
 
-def compute_metrics(args, targets, predictions, otp):
+def compute_metrics(args, targets, predictions, acc_test, otp):
     """Compute evaluation metrics based on the dataset."""
     from sklearn.metrics import f1_score, roc_auc_score, cohen_kappa_score
     # Default metric calculations
-    acc_test = f1_score(targets.cpu().numpy(), predictions.cpu().numpy(), average='weighted') * 100
-    maF = acc_test  # placeholder
+    # acc_test = f1_score(targets.cpu().numpy(), predictions.cpu().numpy(), average='weighted') * 100
+    maF = f1_score(targets.cpu().numpy(), predictions.cpu().numpy(), average='weighted') * 100
     correlation = f1_score(targets.cpu().numpy(), predictions.cpu().numpy(), average='macro') * 100
 
-    if args.dataset in ('ieee_small', 'ieee_big', 'dalia'):
+    if args.dataset in ('ieee_small', 'ieee_big', 'dalia'): # RMSE | MAE | correlation
         acc_test = np.sqrt(torch.mean(((targets - predictions) ** 2).float()).cpu())
         maF = torch.mean(torch.abs(targets - predictions).float()).cpu()
         correlation = np.corrcoef(targets.cpu(), predictions.cpu())[0, 1]
         correlation = 0 if np.isnan(correlation) else correlation
 
-    elif args.dataset in ('ecg', 'chapman', 'physio'):
+    elif args.dataset in ('ecg', 'chapman', 'physio'): # W-F1 | AUC | F1
         otp1 = softmax(otp, axis=1)
         maF = roc_auc_score(targets.cpu(), otp1, multi_class='ovo')
         correlation = f1_score(targets.cpu().numpy(), predictions.cpu().numpy(), average='macro') * 100
@@ -274,7 +274,7 @@ def compute_metrics(args, targets, predictions, otp):
         maF = torch.mean(torch.abs(targets - predictions).float()).cpu()
         correlation = 1
 
-    elif args.dataset == 'sleep':
+    elif args.dataset == 'sleep': # ACC | W-F1 | Kappa
         maF = f1_score(targets.cpu().numpy(), predictions.cpu().numpy(), average='macro') * 100
         correlation = cohen_kappa_score(targets.cpu().numpy(), predictions.cpu().numpy())
 
@@ -283,7 +283,7 @@ def compute_metrics(args, targets, predictions, otp):
         maF = softmax(otp, axis=1)
         correlation = predictions.cpu().numpy()
 
-    return acc_test, maF, correlation
+    return acc_test, maF, correlation # If activity -->  Acc | W-F1 | F1
 
 def compute_consistency(predicted, batch_size):
     """Compute consistency metric for robust checking."""
@@ -342,7 +342,7 @@ def test(test_loader, model, DEVICE, criterion, plot=False, model_c=None, model_
                 final_consistency = (final_consistency + cons) / 2
 
     acc_test = float(correct_preds) * 100.0 / total_samples
-    acc_test, maF, correlation = compute_metrics(args, targets, predictions, otp)
+    acc_test, maF, correlation = compute_metrics(args, targets, predictions, acc_test, otp)
 
     # Optional plotting
     if plot:
